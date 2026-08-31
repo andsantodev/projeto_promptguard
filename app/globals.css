@@ -1,0 +1,135 @@
+@import "tailwindcss";
+
+/*
+ * PromptGuard design tokens (F002).
+ * Single source of truth for color, type, spacing and shape.
+ * Decisions follow the design-taste-frontend skill applied to docs/design-brief.md:
+ * dark graphite/slate base, single amber accent (alert/warn), red reserved for
+ * critical failure, muted grey-green for success. One corner-radius scale, dark
+ * theme locked, zero em-dashes. Consumers use these tokens, never raw defaults.
+ */
+
+@theme {
+  /* ---------------- Typography ---------------- */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Type scale (smallest to display) */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.1rem;
+  --text-base: 0.9375rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.0625rem;
+  --text-lg--line-height: 1.5rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 2rem;
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: 2.25rem;
+  --text-4xl: 2.125rem;
+  --text-4xl--line-height: 2.25rem;
+  --text-5xl: 2.75rem;
+  --text-5xl--line-height: 2.85rem;
+  --text-6xl: 3.25rem;
+  --text-6xl--line-height: 3.4rem;
+
+  /* Letter spacing */
+  --tracking-tight: -0.03em;
+  --tracking-label: 0.18em;
+  --tracking-tag: 0.14em;
+
+  /* ---------------- Color ---------------- */
+
+  /* Graphite base (surfaces, dark theme locked) */
+  --color-base-950: #070c1a;
+  --color-base-900: #0e1626;
+  --color-base-850: #131f33;
+  --color-base-800: #1b2940;
+  --color-base-700: #26364f;
+
+  /* Neutral ink (text) */
+  --color-ink-400: #7a89a0;
+  --color-ink-500: #93a2b6;
+  --color-ink-600: #b7c2d1;
+  --color-ink-700: #cdd6e1;
+  --color-ink-900: #eef2f7;
+
+  /* Amber accent (alert / warning, the single accent) */
+  --color-accent-300: #fcd88a;
+  --color-accent-400: #f2b63b;
+  --color-accent-500: #d69a1a;
+
+  /* Danger red (reserved for critical failure) */
+  --color-danger-300: #f3a1a1;
+  --color-danger-400: #e5484d;
+  --color-danger-600: #b9353c;
+
+  /* Success green (grey-green, low risk) */
+  --color-success-200: #c5e0cd;
+  --color-success-500: #7fae8d;
+  --color-success-700: #57876a;
+
+  /* Hairlines and overlays */
+  --color-line: rgb(255 255 255 / 0.1);
+  --color-line-strong: rgb(255 255 255 / 0.16);
+  --color-overlay: rgb(3 7 15 / 0.7);
+
+  /* ---------------- Shape ---------------- */
+  --radius-xs: 0.375rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-full: 9999px;
+
+  /* ---------------- Elevation ---------------- */
+  --shadow-panel: 0 1px 0 rgb(0 0 0 / 0.2), 0 14px 40px rgb(0 0 0 / 0.35);
+
+  /* ---------------- Spacing ---------------- */
+
+  /* Numeric scale */
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-5: 1.25rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-10: 2.5rem;
+  --spacing-12: 3rem;
+  --spacing-16: 4rem;
+  --spacing-20: 5rem;
+  --spacing-24: 6rem;
+
+  /* Semantic space */
+  --spacing-page: 1.5rem; /* page gutter, mobile */
+  --spacing-page-lg: 2.5rem; /* page gutter, desktop */
+  --spacing-section: 2.5rem; /* vertical rhythm, mobile */
+  --spacing-section-lg: 4rem; /* vertical rhythm, desktop */
+  --spacing-panel: 1.5rem; /* panel/section inner padding */
+  --spacing-card: 1.25rem; /* attack card inner padding */
+  --spacing-stack: 1rem; /* default vertical stack gap */
+  --spacing-stack-sm: 0.5rem; /* tight vertical stack gap */
+}
+
+@layer base {
+  ::selection {
+    background-color: var(--color-accent-400);
+    color: var(--color-base-950);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent-400);
+    outline-offset: 2px;
+  }
+
+  body {
+    background-color: var(--color-base-950);
+    color: var(--color-ink-600);
+  }
+}

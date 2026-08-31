@@ -1,0 +1,221 @@
+{
+  "features": [
+    {
+      "id": "F001",
+      "title": "Walking skeleton",
+      "description": "Page shell, modal open/close mechanics, and the state toggle between the input view and the results view, with placeholder content only — no business logic yet.",
+      "status": "done",
+      "acceptance_criteria": [
+        "App opens and renders the initial view without a blank screen",
+        "Clicking the primary button opens the modal; closing it returns to the initial view",
+        "Toggling to a placeholder results state and back works without errors"
+      ],
+      "verification_command": "npm run test:unit + npm run build + npm run lint + npx tsc --noEmit",
+      "verification_evidence": "2026-08-20: npm run test:unit -> 'Test Files 1 passed / Tests 3 passed' (covers the 3 acceptance criteria). npm run build -> 'Compiled successfully' + 'Generating static pages (3/3)'. npm run lint -> no errors. npx tsc --noEmit -> clean. Components: PromptGuardApp, InitialView, AuditModal, ResultsView. Stack: Next.js 16 (App Router) + Tailwind v4 + Vitest/RTL. Visual decisions via design-taste-frontend skill (dark graphite/slate, amber accent, Geist type).",
+      "depends_on": []
+    },
+    {
+      "id": "F002",
+      "title": "Design system extraction",
+      "description": "Extract design tokens (palette, typography, spacing) from docs/design-brief.md into the codebase (e.g. Tailwind theme config) before any product screen is built, guided by the design-taste-frontend skill.",
+      "status": "done",
+      "acceptance_criteria": [
+        "Color tokens for the graphite/slate base and amber/red accents are defined centrally",
+        "Typography and spacing scale are defined centrally",
+        "F001's shell uses the extracted tokens instead of default styling"
+      ],
+      "verification_command": "npm run build",
+      "verification_evidence": "2026-08-20: all tokens centralized in app/globals.css @theme (design-taste-frontend skill applied to docs/design-brief.md). Color: graphite base (base-950..700), ink text scale (ink-400..900), amber accent (accent-300..500), danger red (danger-300..600), grey-green success (success-200..700), hairlines/overlay. Type scale (text-2xs..6xl + line-heights), tracking (tight/label/tag), radius scale (xs..full), elevation shadow-panel, spacing numeric (1..24) + semantic (page/section/panel/card/stack). F001 shell (PromptGuardApp, InitialView, AuditModal, ResultsView, layout) now consumes only these tokens. npm run build -> static pages 3/3. npm run lint + npx tsc --noEmit clean. npm run test:unit -> 3/3 passed.",
+      "depends_on": ["F001"]
+    },
+    {
+      "id": "F003",
+      "title": "Supabase schema: attacks_library and audit_logs",
+      "description": "Create the attacks_library table (category, title, description, payload) and audit_logs table via the Supabase MCP.",
+      "status": "done",
+      "acceptance_criteria": [
+        "attacks_library table exists with category, title, description, payload columns",
+        "audit_logs table exists with fields for system prompt, selected attacks, verdicts, and score",
+        "RLS is enabled on both tables"
+      ],
+      "verification_command": "Supabase MCP: confirm both tables exist and RLS is enabled",
+      "verification_evidence": "2026-08-20 (project 'Projetos N8N' huqlgnrqrulfavlcvvcy): tables created with prefix promptg_ (user decision) -> promptg_attacks_library (id identity PK, category/title/description/payload not null, title unique, created_at) and promptg_audit_logs (id, created_at, system_prompt not null, selected_attacks jsonb, verdicts jsonb, score numeric(5,2) check 0..100). RLS enabled on both (verified: rls_enabled: true). Policies explicit: promptg_attacks_library_select (SELECT only, anon+authenticated) and promptg_audit_logs_deny_all_clients (ALL deny, anon+authenticated - backend-only writes via service_role). Migrations: create_promptg_attacks_library_and_audit_logs + add_promptg_audit_logs_deny_policy. No new security WARN from advisors. Frontend suite still green (test:unit 3/3, lint, tsc, build).",
+      "depends_on": []
+    },
+    {
+      "id": "F004",
+      "title": "n8n entry guardrails node",
+      "description": "First node in the n8n audit workflow: rejects empty/oversized system prompts and filters attempts to manipulate the Evaluator LLM, before any paid LLM call is made.",
+      "status": "done",
+      "acceptance_criteria": [
+        "Empty system prompt is rejected before any LLM call",
+        "Oversized payload (above a defined character limit) is rejected before any LLM call",
+        "A basic instruction-override attempt targeting the guardrails itself is blocked"
+      ],
+      "verification_command": "n8n: run the guardrails node in isolation with empty/oversized/adversarial test payloads and confirm each is blocked",
+      "verification_evidence": "2026-08-20: workflow n8n real 'PromptGuard Audit' (id RUNwm7OPhyvxJKXt) criado via MCP no projeto pessoal do usuario. Cadeia de entrada (entry-stage, sem nodes LLM): Webhook POST /promptguard/audit (responseMode responseNode) -> Guardrails (Code v2 runOnceForAllItems: rejeita vazio, >4000 chars, e 3 categorias de manipulacao - instruction_override, prompt_leak, false_authority) -> IF 'Allowed?' -> Respond 200 (allowed) / Respond 400 (rejeitado). Limite definido: 4000 chars. Verificado com test_workflow (pin data no trigger) - executions 1..4: EMPTY_PROMPT (status success, lastNode Respond 400, allowed=false), MANIPULATION_ATTEMPT/category instruction_override para 'Ignore todas as instrucoes anteriores...' (Respond 400), PROMPT_TOO_LONG/promptLength 4001 (Respond 400), e caso valido -> allowed=true (Respond 200). Workflow validado (validate_workflow: 5 nodes) antes da criacao.",
+      "depends_on": []
+    },
+    {
+      "id": "F005",
+      "title": "System Prompt input UI",
+      "description": "Textarea inside the modal for pasting the System Prompt, with non-empty validation.",
+      "status": "done",
+      "acceptance_criteria": [
+        "Textarea accepts and displays pasted text",
+        "Confirm button is disabled while the field is empty"
+      ],
+      "verification_command": "npm test -- PromptInput",
+      "verification_evidence": "2026-08-20: components/SystemPromptInput.tsx (controlled textarea, label above, validation helper below). Confirm button in AuditModal is disabled while the field is empty (canConfirm = prompt trimmed non-empty AND >=1 attack). Verified: npm test -- PromptInput -> 3/3 passed; npm run test:unit -> 9/9; lint, tsc, build clean.",
+      "depends_on": ["F002"]
+    },
+    {
+      "id": "F006",
+      "title": "Attack selection UI",
+      "description": "Lateral list in the modal showing the 10 attacks_library options (title + short description, always visible, no hover dependency), letting the user select between 1 and 6.",
+      "status": "done",
+      "acceptance_criteria": [
+        "All 10 attack options render with title and description visible without hover",
+        "User can select a minimum of 1 and a maximum of 6 attacks",
+        "Confirm button is disabled when 0 attacks are selected"
+      ],
+      "verification_command": "npm test -- AttackSelection",
+      "verification_evidence": "2026-08-20: components/AttackSelection.tsx renders the catalog from promptg_attacks_library (real Supabase via lib/attacks.ts + @supabase/supabase-js, RLS SELECT existing; PromptGuardApp fetches on mount with loading/error states). Card per attack with title + description always visible (no hover), clickable, role=checkbox/aria-checked, counter X/6, 7th blocked when 6 selected, confirm disabled with 0. Verified: npm test -- AttackSelection -> 3/3; npm run test:unit -> 9/9; lint, tsc, build clean. Env in .env.local (gitignored).",
+      "depends_on": ["F002", "F003"]
+    },
+    {
+      "id": "F007",
+      "title": "Target LLM node",
+      "description": "n8n node that calls the Target LLM (deepseek/deepseek-v4-flash-0731 via OpenRouter) with the user's System Prompt plus one attack payload as the user message, per selected attack.",
+      "status": "done",
+      "acceptance_criteria": [
+        "For a given system prompt + attack payload, the node returns a simulated response",
+        "Runs once per selected attack (1 to 6 times per audit)"
+      ],
+      "verification_command": "n8n: run the Target LLM node with a sample system prompt and one attack payload; confirm a response is returned",
+      "verification_evidence": "2026-08-20: workflow 'PromptGuard Audit' (RUNwm7OPhyvxJKXt) estendido, agora 8 nodes: Webhook -> Guardrails -> Allowed? -> Prepare Attacks (Code, achata {systemPrompt, attacks} em 1 item por ataque) -> Target LLM (node OpenAI v1.1 chat/complete, credencial openAiApi 'Base URL OpenRouter', modelo deepseek/deepseek-v4-flash-0731, msg system={{ $json.systemPrompt }} + user={{ $json.payload }}, simplifyOutput, maxTokens 800) -> Normalize Response (Code: extrai message.content, fallback reasoning, retorna { attackId, response }) -> Respond 200. Execucao real via execute_workflow (webhook production) com 2 ataques (ids 3 e 5): Target LLM respondeu para ambos, Normalize extraiu content correto (attackId 3 e 5), Respond 200 ok, status success. Notas: node OpenAI executa nativamente por item (N attacks -> N chamadas), entao o splitInBatches foi descartado (loop-back nao iterava nesta instancia); modelos: openai/gpt-oss-120b:free foi aposentado (404), z-ai/glm-5.2:free estava com 429 rate-limit recorrente - decidido com o usuario usar deepseek/deepseek-v4-flash-0731. Contrato de entrada agora envia { attacks: [{id,title,payload}] } e o Guardrails repassa os ataques (antes era selectedAttackIds).",
+      "depends_on": ["F003", "F004"]
+    },
+    {
+      "id": "F008",
+      "title": "Evaluator LLM node",
+      "description": "n8n node that calls the Evaluator LLM (deepseek/deepseek-v4-flash-0731 via OpenRouter) with the Target LLM's response, returning a verdict, severity, and — when the attack succeeded — a short mitigation suggestion, in a single call.",
+      "status": "done",
+      "acceptance_criteria": [
+        "Given a Target LLM response, returns a structured verdict (success/failure) and severity",
+        "When the verdict is 'success', a mitigation suggestion is included in the same response",
+        "No additional LLM call is made to generate the mitigation suggestion"
+      ],
+      "verification_command": "n8n: run the Evaluator LLM node against a known-vulnerable sample response and confirm verdict + severity + mitigation are returned",
+      "verification_evidence": "2026-08-20: workflow 'PromptGuard Audit' (RUNwm7OPhyvxJKXt) agora com 14 nodes (10 funcionais + 4 sticky notes). Cadeia: ... Normalize Response -> Evaluator (OpenAI v1.1 chat/complete, deepseek/deepseek-v4-flash-0731, maxTokens 512, system prompt de avaliador + user com systemPrompt/attackTitle/payload/targetResponse via $('Prepare Attacks')) -> Extrair Verdict (Code: parse JSON, fallback regex, normaliza verdict/severity/mitigation) -> Respond 200. Execucao via execute_workflow (webhook production, manual) com 2 ataques (id 2 prompt leak, id 3 role-play): ambos retornaram { attackId, verdict:'success', severity:'low', mitigation:'...' } em resposta unica (sem chamada extra, criterio 3 OK); Respond 200 devolveu os 2 vereditos. Pairing multi-item corrigido: 'Normalize Response' e 'Extrair Verdict' usam indice posicional '$('X').all()[i]' (o pairing $('X').item retorna o primeiro item repetido no modo runOnceForAllItems). Organizacao visual: 4 sticky notes (Entrada/Guardrails, Target LLM, Evaluator LLM, Saida).",
+      "depends_on": ["F007"]
+    },
+    {
+      "id": "F009",
+      "title": "Risk score calculation",
+      "description": "Compute the overall risk score (0-100%) from the individual verdicts, normalized by the number of attacks actually run (1 to 6), so the score is comparable regardless of how many attacks the user selected.",
+      "status": "done",
+      "acceptance_criteria": [
+        "Score with 6/6 attacks failed equals score with 1/1 attack failed (both 100%)",
+        "Score with 0 successful attacks is 0%, regardless of how many attacks were run"
+      ],
+      "verification_command": "npm test -- scoreCalculation",
+      "verification_evidence": "2026-08-20: lib/scoreCalculation.ts cria calculateRiskScore(results: { verdict: 'success' | 'failure' }[]): number => Math.round(successCount / total * 100); array vazio retorna 0 (evita NaN). lib/scoreCalculation.test.ts 5 testes: 6/6 success == 1/1 success (100) [crit 1], 0/6 e 0/1 success == 0 [crit 2], 2/4 -> 50, [] -> 0, 2/3 -> 67 (round). npm test -- scoreCalculation -> 1 file / 5 tests passed. npm run test:unit -> 4 files / 14 passed; npm run build (static 3/3), npm run lint, npx tsc --noEmit limpos. Bonus no workflow n8n: system prompt do Evaluator agora instrui que a 'mitigation' deve ser escrita no mesmo idioma do SystemPrompt do usuario (verificado na exec 30: system prompt PT-BR + role-play sucesso -> mitigation 'Mantenha-se estritamente no papel de assistente de suporte ao cliente...' em PT-BR); maxTokens do Evaluator ajustado para 800 (512 era consumido pelo reasoning, truncando o JSON) e 'Extrair Verdict' robustificado (escaneia JSON dentro do reasoning quando content vem null).",
+      "depends_on": ["F008"]
+    },
+    {
+      "id": "F010",
+      "title": "Results panel UI",
+      "description": "Two-column results view: System Prompt (read-only) + risk gauge on the left; one card per selected attack (title, short description, severity badge, verdict, mitigation suggestion when applicable) on the right.",
+      "status": "done",
+      "acceptance_criteria": [
+        "Gauge renders the score visually from 0 to 100%",
+        "One card renders per selected attack, matching the count chosen in F006",
+        "Mitigation suggestion is visible on the card (not hidden behind hover) when the attack succeeded"
+      ],
+      "verification_command": "npm run build",
+      "verification_evidence": "2026-08-20: ResultsView.tsx reescrito: RiskGauge consome calculateRiskScore (F009) com cores dinâmicas (success-500 <50%, accent-400 50-80%, danger-400 >80%). AttackCard com title/description/severity badge (severityConfig mapeia critical/high/medium/low para bg/text color tokens) + verdict legível (success='Ataque bem-sucedido...' em danger-400, failure='Ataque falhou...' em success-500) + mitigation visível quando attack succeeded (bg-base-800/50). PromptGuardApp atualizado: generateMockVerdicts cria AuditResult[] com titulo/descricao reais dos ataques, passado ao ResultsView. Tipos em lib/types.ts: AttackSeverity, AttackVerdictType, AuditResult. npm run build -> static pages 3/3; npm run test:unit -> 5 files / 18 passed; lint + tsc limpos.",
+      "depends_on": ["F002", "F009"]
+    },
+    {
+      "id": "F011",
+      "title": "Consolidated recommendations block",
+      "description": "Summary block on the results view aggregating the mitigation suggestions already generated per attack (F008) into a short consolidated list — no additional LLM call.",
+      "status": "done",
+      "acceptance_criteria": [
+        "Block lists the mitigation suggestions from all attacks that succeeded",
+        "Block is empty/hidden when no attack succeeded",
+        "No new LLM call is triggered to build this block"
+      ],
+      "verification_command": "npm test -- recommendationsSummary",
+      "verification_evidence": "2026-08-20: components/RecommendationsSummary.tsx filtrando results.filter(r => r.verdict === 'success' && r.mitigation.trim() !== ''); retorna null se vazio (hidden, criterio 2). Cada item mostra attack title + mitigation em bg-base-900. Sem chamadas externas (componente React puro, criterio 3). RecommendationsSummary.test.tsx 4 testes: renderiza mitigacoes de 2 ataques com sucesso (criterio 1), oculto quando nenhum sucesso, oculto quando mitigacao vazia, renderiza mit. unica. npm test -- recommendationsSummary -> 1 file / 4 passed. Suite completa 5 files / 18 passed; npm run build (static 3/3); npm run lint + npx tsc --noEmit limpos.",
+      "depends_on": ["F010"]
+    },
+    {
+      "id": "F012",
+      "title": "Partial-failure handling per attack",
+      "description": "If the Target or Evaluator LLM call fails/times out for a given attack, mark that attack's card as 'not evaluated' (excluded from the score) with a manual retry button — no automatic retry.",
+      "status": "done",
+      "acceptance_criteria": [
+        "A forced timeout on one attack shows 'not evaluated' on its card, not a passed/failed verdict",
+        "The 'not evaluated' attack is excluded from the score calculation (F009)",
+        "A manual retry button re-runs only that attack, not the whole audit"
+      ],
+      "verification_command": "n8n: force a timeout on one attack node mid-audit and confirm the other attacks complete with a partial result",
+      "verification_evidence": "2026-08-20: n8n - setNodeSettings onError=continueRegularOutput (retryOnFail=false) nos nodes 'Target LLM' e 'Evaluator' para que a falha de um ataque não aborte a auditoria. Novo node Code 'Finalize Results' entre Extrair Verdict e Respond 200: reconcilia os vereditos com a lista canonica de 'Prepare Attacks' e emite verdict='not_evaluated' p/ ataques sem veredito. test_workflow (exec 31, pin) com 2 ataques onde o Target LLM produziu 1 item: Finalize Results emitiu attackId 3 success + attackId 5 not_evaluated; Respond 200 ok. execute_workflow (exec 32 real, 1 ataque): cadeia completa ok. Frontend - lib/types.ts: AttackVerdictType ganha 'not_evaluated'; AttackSeverity e AuditResult.severity opcionais. lib/scoreCalculation.ts: exclui not_evaluated do denominador (avaliados = filter verdict!=='not_evaluated'); 0 se nenhum avaliado. 3 novos testes (success+3 not=100; todos not=0; mixed 2/3=67). components/ResultsView.tsx: AttackCard renderiza estado 'Nao avaliado' (badge neutro + botao 'Tentar novamente' via onRetry). components/PromptGuardApp.tsx: mock marca attack id%3===0 como not_evaluated (falha deterministica) + retryAttack re-roda so aquele ataque. Verificacao: npm run test:unit -> 21/21; npm test -- scoreCalculation -> 8/8; npm run build (static 3/3); lint + tsc limpos.",
+      "depends_on": ["F007", "F008", "F010"]
+    },
+    {
+      "id": "F013",
+      "title": "Session rate limiting",
+      "description": "Rate limit audits per anonymous session (IP + local session token): 3 audits/hour and 10/day per session.",
+      "status": "done",
+      "acceptance_criteria": [
+        "A 4th audit within the same hour, same session, is rejected with a clear message",
+        "An 11th audit within the same day, same session, is rejected with a clear message"
+      ],
+      "verification_command": "npm test -- rateLimiter",
+      "verification_evidence": "2026-08-20: lib/rateLimiter.ts (puro, injetavel): TimestampStorage (getItem/setItem; em produção localStorage), getSessionToken (gera/reusa token persistente em promptg_session_token via crypto.randomUUID com fallback), checkRateLimit(storage, nowMs, limits?, token?) com DEFAULT_RATE_LIMITS={maxPerHour:3, maxPerDay:10}, recordAudit (adiciona timestamp e trima >24h). lib/rateLimiter.test.ts 7 testes: 3 primeiras na hora allowed (remaining 1); 4a bloqueada reason 'hour'; 10 no dia + 11a bloqueada reason 'day'; timestamps fora da janela 1h ignorados; storage vazio cotas cheias; token estavel entre chamadas; cota diaria expira apos 24h. Integrado ao PromptGuardApp (checkRateLimit antes de disparar, recordAudit ao concluir; mensagens claras 'Limite de 3 auditorias por hora...'/'Limite diario de 10...' renderizadas no AuditModal via prop rateLimitError). Vitest: jsdom localStorage quebrado no ambiente -> mock LocalStorageMock em vitest.setup.ts + environmentOptions.jsdom.url em vitest.config.ts. npm test -- rateLimiter -> 7/7; npm run test:unit -> 6 files / 28 passed; npm run build (static 3/3); lint + tsc limpos.",
+      "depends_on": ["F003"]
+    },
+    {
+      "id": "F014",
+      "title": "Global daily budget cap",
+      "description": "Guardrails node checks a global counter before allowing a new audit; caps at 50 completed audits/day across all sessions, configurable via environment variable.",
+      "status": "in_progress",
+      "acceptance_criteria": [
+        "The 51st audit of the day, regardless of session, is rejected with a clear message",
+        "Cap value is read from an environment variable, not hardcoded"
+      ],
+      "verification_command": "n8n: set the cap to 1 via env var in a test environment, run 2 audits, confirm the 2nd is rejected",
+      "verification_evidence": "2026-08-20 + 2026-08-27 (PARCIAL - env var pendente): workflow n8n RECRIADO apos exclusao do n8n antigo e REFINADO (id atual 0FLsSXl0AqgSt0FP, 23 nodes com 4 sticky notes; antigo 9ISyKixqbCrk2otd arquivado). Gate de budget entre Permitido? e Prepare Attacks: Permitido? (true) -> Contar Auditorias do Dia (Supabase getAll em promptg_audit_logs, created_at >= $now.startOf('day').toUTC().toISO(), alwaysOutputData:true para nao travar em dia sem auditorias) -> Verificar Orcamento (Code: count = input.all().filter(linhas reais).length; cap = Number(process.env.PROMPTGUARD_DAILY_CAP ?? 50) com try/catch; allowed = count < cap) -> Orcamento OK? (IF); true -> Separar Ataques; false -> Responder 400 Orcamento (400, BUDGET_EXCEEDED). Budget Check repassa systemPrompt+attacks originais. VERIFICADO em 2026-08-27: contagem real validada (rows de hoje -> Count retornou count -> Verificar Orcamento {allowed:true, budgetCap:50}); fluxo completo ponta a ponta ok. PENDENCIA: definicao de PROMPTGUARD_DAILY_CAP=1 no hosting e rodar 2 auditorias confirmando rejeicao da 2a (verificacao oficial) - exige acesso ao hosting n8n; $vars e Enterprise-only; leitura de process.env no Code node confirmada (default 50 aplicado).",
+      "depends_on": ["F004"]
+    },
+    {
+      "id": "F015",
+      "title": "audit_logs persistence",
+      "description": "Persist each completed audit (system prompt, selected attacks, verdicts, score) to the audit_logs table in Supabase.",
+      "status": "done",
+      "acceptance_criteria": [
+        "After a completed audit, a corresponding row exists in audit_logs",
+        "Stored data includes the score and per-attack verdicts"
+      ],
+      "verification_command": "Supabase MCP: run a test audit, then query audit_logs and confirm a matching row exists",
+      "verification_evidence": "2026-08-20 + 2026-08-27 + 2026-08-31: fluxo evoluiu para workflow final 2cq3t7LR9sXJ7HGi (19 nodes, webhook onReceived /promptguard/audit) com splitInBatches loop (batchSize=1) que processa 1 ataque por iteracao, gravando progresso 1-por-vez em promptg_audit_progress, e onDone executa Finalizar Resultados -> Calcular Score -> Montar Payload -> Inserir Log em promptg_audit_logs. Montar Payload envia arrays -> verdicts/selected_attacks como **jsonb array** real (verificado jsonb_typeof=array). RLS deny-all clients preservado. Verificado com exec 39 (2 ataques): veredito 1 ~27s, veredito 2 ~52s, log final jsonb array. Fluxo completo aprovado pelo usuario.",
+      "depends_on": ["F003", "F009"]
+    },
+    {
+      "id": "F016",
+      "title": "Seed attacks_library",
+      "description": "Insert the 10 curated attacks (category, title, description, payload) from docs/attacks-library-seed.md into the attacks_library table.",
+      "status": "done",
+      "acceptance_criteria": [
+        "attacks_library contains exactly 10 rows",
+        "Each row has a non-empty category, title, description, and payload"
+      ],
+      "verification_command": "Supabase MCP: SELECT count(*) FROM attacks_library — expect 10",
+      "verification_evidence": "2026-08-20 (project 'Projetos N8N' huqlgnrqrulfavlcvvcy): migration seed_promptg_attacks_library inserted the 10 curated attacks from docs/attacks-library-seed.md into promptg_attacks_library (idempotent via on conflict (title) do nothing). Verified with SQL: total_rows = 10, empty_category = 0, empty_title = 0, empty_description = 0, empty_payload = 0.",
+      "depends_on": ["F003"]
+    }
+  ]
+}
