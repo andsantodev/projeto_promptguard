@@ -4,7 +4,7 @@
 
 ![Status](https://img.shields.io/badge/status-portfolio-6366f1?style=flat-square)
 
-**🔗 Projeto online:** <!-- Adicione o link da Vercel após o deploy --> [`https://promptguard.vercel.app`](pendente)
+**🔗 Projeto online:** [`https://promptguard-coral.vercel.app/`]
 
 ---
 
@@ -99,11 +99,9 @@ Frontend                         Backend
 
 ## Screenshots
 
-<!-- Insira aqui os prints depois de capturá-los -->
-
 | Tela inicial | Modal de configuração | Painel de resultados |
 |:---:|:---:|:---:|
-| `screenshots/initial.png` | `screenshots/modal.png` | `screenshots/results.png` |
+| ![Tela inicial](images/image-01.png) | ![Modal de configuração](images/image-02.png) | ![Painel de resultados](images/image-03.png) |
 
 ---
 
