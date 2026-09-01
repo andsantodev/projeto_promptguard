@@ -35,6 +35,6 @@ PromptGuard é um auditor de segurança para LLMs: o usuário cola o System Prom
 - **Tom:** sério, profissional, "segurança da informação" — pense em painel de compliance/SOC (linha Vanta, Drata, Wiz), não em estética de filme de hacker.
 - **Evitar explicitamente:** verde/vermelho neon estilo terminal, tipografia monoespaçada em excesso, código binário caindo, ícones de caveira ou cadeado quebrado — clichês que desvalorizam a seriedade do projeto.
 - **Paleta:** fundo grafite/slate escuro, mas não excessivamente dark. Acentos contidos: âmbar para alerta/aviso, vermelho reservado só para falha crítica. Um verde-acinzentado discreto (não neon) para estado de sucesso/baixo risco.
-- **Tipografia:** sans-serif limpa para textos e UI; opcionalmente uma monoespaçada discreta só para a área do System Prompt somente leitura, reforçando o caráter técnico sem exagero.
+- **Tipografia:** DM Sans (sans-serif geométrico, estilo Supabase) para headlines e UI — presença mais forte em display que o Geist original; Geist Mono mantido para blocos de código/system prompt. Tracking mais agressivo em headlines (-0.04em).
 - **Componentes:** cards em vez de tooltips em todo o painel de resultado — decisão explícita para funcionar bem em touch/mobile.
 - **Gauge de risco:** variação de cor por faixa (baixo/médio/alto), mantendo a paleta contida acima — não usar vermelho/verde saturados de alerta genérico.

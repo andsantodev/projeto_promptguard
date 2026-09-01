@@ -13,6 +13,7 @@
 # misc
 .DS_Store
 *.pem
+*.key
 
 # debug
 npm-debug.log*
@@ -23,6 +24,9 @@ yarn-error.log*
 # env files - never commit credentials
 .env
 .env*.local
+
+# local tools / agents
+.agents/
 
 # typescript
 *.tsbuildinfo

@@ -79,20 +79,15 @@ export function AuditModal({
         aria-modal="true"
         aria-labelledby="audit-modal-title"
         tabIndex={-1}
-        className="relative w-full max-w-5xl rounded-lg border border-line bg-base-900 shadow-panel outline-none"
+        className="relative w-full max-w-5xl max-h-[90dvh] overflow-y-auto rounded-lg border border-line bg-base-900 shadow-panel outline-none my-4"
       >
-        <header className="flex items-center justify-between gap-4 border-b border-line px-panel py-4">
-          <div>
-            <h2
-              id="audit-modal-title"
-              className="text-base font-medium text-ink-900"
-            >
-              Configurar auditoria
-            </h2>
-            <p className="mt-0.5 text-xs text-ink-500">
-              Cole o system prompt e selecione de 1 a 6 ataques.
-            </p>
-          </div>
+        <header className="flex items-center justify-between gap-4 border-b border-line px-panel py-3.5">
+          <h2
+            id="audit-modal-title"
+            className="text-base font-semibold text-ink-900"
+          >
+            Configurar auditoria
+          </h2>
           {!processing && (
             <button
               type="button"
@@ -123,7 +118,7 @@ export function AuditModal({
             </div>
           </div>
         ) : (
-          <div className="grid gap-6 p-panel lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="grid gap-8 p-panel lg:grid-cols-[0.9fr_1.1fr]">
             <SystemPromptInput value={systemPrompt} onChange={setSystemPrompt} />
             <AttackSelection
               attacks={attacks}

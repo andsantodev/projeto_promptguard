@@ -73,7 +73,7 @@ describe("F001 - Walking skeleton", () => {
     await renderApp();
 
     const heading = screen.getByRole("heading", {
-      name: /Auditoria de seguranca para o seu system prompt/i,
+      name: /Simule ataques de seguranca no seu system prompt/i,
     });
     expect(heading).toBeInTheDocument();
     expect(

@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 
-const N8N_WEBHOOK_URL =
-  process.env.N8N_WEBHOOK_URL ??
-  "https://anderson-n8n.duckdns.org/webhook/promptguard/audit";
+const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL;
 
 interface AttackPayload {
   id: number;
@@ -45,6 +43,13 @@ export async function POST(request: Request) {
   }
 
   const auditId = `run-${randomUUID()}`;
+
+  if (!N8N_WEBHOOK_URL) {
+    return NextResponse.json(
+      { error: "Serviço de auditoria não configurado." },
+      { status: 503 }
+    );
+  }
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10000);

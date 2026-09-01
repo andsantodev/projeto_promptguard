@@ -28,7 +28,7 @@ export function AttackSelection({
         </span>
       </div>
 
-      <ul className="flex max-h-[26rem] flex-col gap-2 overflow-y-auto rounded-md border border-line bg-base-900 p-2">
+      <ul className="flex max-h-[28rem] flex-col divide-y divide-line overflow-y-auto rounded-md border border-line bg-base-900">
         {attacks.map((attack) => {
           const checked = selectedIds.includes(attack.id);
           const disabled = !checked && atMax;
@@ -41,15 +41,15 @@ export function AttackSelection({
                 aria-label={`${attack.title} - ${attack.description}`}
                 disabled={disabled}
                 onClick={() => onToggle(attack.id)}
-                className={`flex w-full items-start gap-3 rounded-md border px-3 py-2.5 text-left text-xs leading-relaxed transition-colors ${
+                className={`flex w-full items-start gap-3 px-4 py-3 text-left text-xs leading-relaxed transition-colors ${
                   checked
-                    ? "border-accent-400/50 bg-base-850 text-ink-900"
-                    : "border-line bg-base-900 text-ink-600"
-                }`}
+                    ? "bg-base-850 text-ink-900"
+                    : "bg-base-900 text-ink-600 hover:bg-base-850/50"
+                } disabled:cursor-not-allowed disabled:opacity-40`}
               >
                 <span
                   className={[
-                    "inline-flex size-5 shrink-0 items-center justify-center rounded-sm border",
+                    "mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-sm border",
                     checked
                       ? "bg-accent-400 text-base-950 border-accent-400"
                       : "border-line text-transparent",
@@ -58,10 +58,10 @@ export function AttackSelection({
                   <Check size={14} weight="bold" aria-hidden="true" />
                 </span>
                 <span>
-                  <span className="block font-medium text-ink-900">
+                  <span className="block text-sm font-medium text-ink-900">
                     {attack.title}
                   </span>
-                  <span className="block text-ink-500">
+                  <span className="mt-0.5 block text-ink-500">
                     {attack.description}
                   </span>
                 </span>

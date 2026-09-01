@@ -30,6 +30,7 @@ export function PromptGuardApp() {
   const [runtimeError, setRuntimeError] = useState<string | null>(null);
   const [blockedReason, setBlockedReason] = useState<string | null>(null);
   const [rateLimitError, setRateLimitError] = useState<string | null>(null);
+  const [modalKey, setModalKey] = useState(0);
   const pollAbort = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -49,6 +50,7 @@ export function PromptGuardApp() {
 
   const openModal = useCallback(() => {
     setRateLimitError(null);
+    setModalKey((k) => k + 1);
     setModalOpen(true);
   }, []);
 
@@ -163,6 +165,7 @@ export function PromptGuardApp() {
         renderResults()
       )}
       <AuditModal
+        key={modalKey}
         open={modalOpen}
         processing={false}
         attacks={attacks}
