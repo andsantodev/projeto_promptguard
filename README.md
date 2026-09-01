@@ -4,7 +4,7 @@
 
 ![Status](https://img.shields.io/badge/status-portfolio-6366f1?style=flat-square)
 
-**🔗 Projeto online:** [`https://promptguard-coral.vercel.app/`]
+**🔗 Projeto online:** [https://promptguard-coral.vercel.app/](https://promptguard-coral.vercel.app/)
 
 ---
 
