@@ -1,0 +1,295 @@
+{
+  "features": [
+    {
+      "id": "F001",
+      "title": "Walking skeleton",
+      "description": "Replace the Vite template with the app shell: folder structure from AGENTS.md, screen state machine (initial view, configuration modal, results view) with placeholder content only, and the first real component tests. No business logic yet.",
+      "status": "todo",
+      "acceptance_criteria": [
+        "App renders the initial screen without a blank page",
+        "Clicking the primary action opens the configuration modal; closing it returns to the initial screen",
+        "Switching to a placeholder results state and back works without errors",
+        "Folder structure exists: src/components, src/hooks, src/lib, src/styles, src/test",
+        "Template leftovers (App.css, assets/hero.png, assets/react.svg, assets/vite.svg) are removed",
+        "At least one component test covers the screen toggle and runs under vitest"
+      ],
+      "verification_command": "npm run lint && npm run typecheck && npm run test:unit",
+      "verification_evidence": null,
+      "depends_on": []
+    },
+    {
+      "id": "F002",
+      "title": "Design tokens",
+      "description": "Port the graphite/amber visual identity from the v1 into src/styles/tokens.css using Tailwind v4 @theme, including colour, type scale, spacing, radius and shadow tokens, and load DM Sans and Geist Mono locally through fontsource.",
+      "status": "todo",
+      "acceptance_criteria": [
+        "Every colour, type, spacing, radius and shadow token lives in one stylesheet and is the only styling source used by components",
+        "The F001 shell uses tokens only, with no raw hex value in components",
+        "Fonts load from local packages, with no external font CDN request in the built CSS",
+        "Production build succeeds and the token classes appear in the generated CSS"
+      ],
+      "verification_command": "npm run lint && npm run typecheck && npm run test:unit && npm run build",
+      "verification_evidence": null,
+      "depends_on": ["F001"]
+    },
+    {
+      "id": "F003",
+      "title": "FastAPI BFF bootstrap",
+      "description": "Backend skeleton that proves the BFF path works end to end: FastAPI entrypoint, settings from environment variables, GET /api/health, pytest suite, and the Vite dev proxy sending /api to port 8000.",
+      "status": "done",
+      "acceptance_criteria": [
+        "GET /api/health returns 200 with status ok and the configured model identifiers",
+        "Configuration is read from environment variables with safe defaults, never hardcoded",
+        "Unknown /api routes return 404",
+        "Vite dev server proxies /api to the local FastAPI process",
+        "pytest runs the API tests without starting a server"
+      ],
+      "verification_command": "npm run test:api && npm run lint && npm run typecheck",
+      "verification_evidence": "2026-10-23 (bootstrap): `.venv/bin/python -m pytest -q backend/tests` -> 2 passed, 1 warning (starlette httpx deprecation, no failure). `npm run lint` -> oxlint clean with --deny-warnings. `npm run typecheck` -> clean. `npm run test:unit` -> 1 passed (scaffold smoke test). Files: backend/main.py (app + /api/health + app.frontend for dist), backend/config.py (pydantic-settings), backend/routers/health.py, backend/tests/test_health.py, vite.config.ts (proxy /api -> 127.0.0.1:8000), requirements.txt, requirements-dev.txt, pyproject.toml (tool.vercel entrypoint). FastAPI 0.162.0 confirms app.frontend exists; Vercel Hobby function limit is 300s with Fluid compute.",
+      "depends_on": []
+    },
+    {
+      "id": "F004",
+      "title": "Attack catalog",
+      "description": "Version the attack library as backend/data/attacks.yaml (10 attacks across the 4 categories, each with severity), validate it at import time, and expose GET /api/attacks with everything except the payload.",
+      "status": "todo",
+      "acceptance_criteria": [
+        "GET /api/attacks returns 10 entries with id, category, title, description and severity",
+        "The response contains no payload field, asserted by a test",
+        "A malformed entry (missing field or duplicate id) makes the loader fail loudly at startup, covered by a test",
+        "Entries are ordered by id"
+      ],
+      "verification_command": "npm run test:api",
+      "verification_evidence": null,
+      "depends_on": ["F003"]
+    },
+    {
+      "id": "F005",
+      "title": "Initial screen",
+      "description": "Hero screen with product name, tagline, one-paragraph explanation and the primary call to action that opens the configuration modal, including the catalog loading, success, error and empty states.",
+      "status": "todo",
+      "acceptance_criteria": [
+        "loading: the CTA reads Carregando biblioteca and is disabled while the catalog request is in flight",
+        "success: the CTA reads Iniciar auditoria, is enabled and opens the modal",
+        "error: the screen shows Catalogo indisponivel with a retry action, and still renders the hero",
+        "empty: an empty catalog shows an explicit message instead of a blank or broken screen",
+        "At 360px viewport there is no horizontal scroll and no information depends on hover"
+      ],
+      "verification_command": "npm run lint && npm run typecheck && npm run test:unit",
+      "verification_evidence": null,
+      "depends_on": ["F001", "F002", "F004"]
+    },
+    {
+      "id": "F006",
+      "title": "Configuration modal",
+      "description": "Modal with the system prompt textarea, the attack list with title and description always visible, selection of 1 to 6 attacks, counter, validation and keyboard behaviour.",
+      "status": "todo",
+      "acceptance_criteria": [
+        "The textarea accepts pasted text and the confirm button is disabled while the prompt is empty",
+        "With zero attacks selected the confirm button stays disabled; with one it becomes enabled",
+        "Selecting a seventh attack is blocked and the counter shows 6/6",
+        "A prompt above 4000 characters shows a length warning and blocks confirmation",
+        "ESC and backdrop click close the modal, and focus returns to the element that opened it",
+        "Confirming calls the callback with the trimmed prompt and the selected ids"
+      ],
+      "verification_command": "npm run lint && npm run typecheck && npm run test:unit",
+      "verification_evidence": null,
+      "depends_on": ["F002", "F004", "F005"]
+    },
+    {
+      "id": "F007",
+      "title": "Audit endpoint",
+      "description": "POST /api/audit that validates the payload, calls the target model with the user system prompt plus the attack payload, calls the evaluator with structured JSON output, retries once on invalid JSON, and maps every failure to a stable error code.",
+      "status": "todo",
+      "acceptance_criteria": [
+        "A valid request returns verdict, severity, mitigation, targetResponse, latencyMs, targetModel and evaluatorModel",
+        "Empty prompt, prompt above 4000 characters and unknown attackId return 422 with a field-level message",
+        "Evaluator returning invalid JSON twice returns 502 with a stable code, never a stack trace",
+        "A provider timeout returns 504 within the configured timeout window",
+        "httpx is mocked with respx; tests cover success, invalid-JSON retry and timeout",
+        "The request payload is never written to logs"
+      ],
+      "verification_command": "npm run test:api",
+      "verification_evidence": null,
+      "depends_on": ["F003", "F004"]
+    },
+    {
+      "id": "F008",
+      "title": "Risk score calculation",
+      "description": "Pure function that turns per-attack verdicts into a 0-100 score, weighting success by severity and excluding not-evaluated attacks from the denominator.",
+      "status": "todo",
+      "acceptance_criteria": [
+        "All critical successes produce 100 and no successes produce 0",
+        "not_evaluated entries are excluded from both numerator and denominator",
+        "One critical plus one low success out of two evaluated attacks rounds to 63",
+        "An empty list returns 0 instead of NaN",
+        "Gauge colour bands are derived from the score: below 50 success, 50 to 80 accent, above 80 danger"
+      ],
+      "verification_command": "npm run test:unit",
+      "verification_evidence": null,
+      "depends_on": ["F001"]
+    },
+    {
+      "id": "F009",
+      "title": "Results screen with progressive execution",
+      "description": "Results view with the prompt in read-only mode, the risk gauge and one card per selected attack. A useAudit hook fires one request per attack in parallel and fills each card as its response arrives.",
+      "status": "todo",
+      "acceptance_criteria": [
+        "Confirming an audit immediately shows one loading card per selected attack, in the selection order",
+        "Each card fills as soon as its own request resolves; a slow attack does not block the others",
+        "When every card resolves the score appears in the gauge",
+        "Leaving the results screen stops in-flight updates without React state warnings",
+        "The cards keep the selection order regardless of response order"
+      ],
+      "verification_command": "npm run lint && npm run typecheck && npm run test:unit",
+      "verification_evidence": null,
+      "depends_on": ["F002", "F006", "F007", "F008"]
+    },
+    {
+      "id": "F010",
+      "title": "Partial failure and error states",
+      "description": "Per-card failure handling and the error taxonomy: not evaluated with manual retry, quota exceeded, provider failure and unexpected error, each with its own message while completed cards stay intact.",
+      "status": "todo",
+      "acceptance_criteria": [
+        "A failed attack shows Nao avaliado with a retry button that re-sends only that attack",
+        "Retrying replaces that card only and never duplicates it",
+        "A 429 response shows the quota message and keeps completed cards visible",
+        "A 502 or 504 shows a provider failure message with retry",
+        "No error path leaves the screen blank; a test asserts the results view still renders after each error code"
+      ],
+      "verification_command": "npm run lint && npm run typecheck && npm run test:unit",
+      "verification_evidence": null,
+      "depends_on": ["F009"]
+    },
+    {
+      "id": "F011",
+      "title": "Evidence and model disclosure",
+      "description": "Expandable evidence panel per card showing the target model response truncated at 800 characters, plus the audited and evaluating model identifiers in the results header.",
+      "status": "todo",
+      "acceptance_criteria": [
+        "Each card has a toggle with aria-expanded collapsed by default that reveals the target response",
+        "The response is truncated at 800 characters and an indicator appears when truncation happened",
+        "The toggle is reachable and operable by keyboard",
+        "The results header shows the target and evaluator model identifiers returned by the API"
+      ],
+      "verification_command": "npm run lint && npm run typecheck && npm run test:unit",
+      "verification_evidence": null,
+      "depends_on": ["F009"]
+    },
+    {
+      "id": "F012",
+      "title": "Quota schema",
+      "description": "Create promptg_quota plus an atomic consume function through the Supabase MCP, with RLS deny-all for clients, and drop the three legacy promptg_ tables that stored user prompts.",
+      "status": "todo",
+      "acceptance_criteria": [
+        "promptg_quota has scope, scope_key, day and count, with a primary key over the first three",
+        "The consume function increments and enforces the limit inside a single atomic statement, returning whether the call was allowed",
+        "A call at the limit returns false and does not increment the counter",
+        "RLS is enabled with deny-all policies for anon and authenticated",
+        "promptg_attacks_library, promptg_audit_logs and promptg_audit_progress no longer exist"
+      ],
+      "verification_command": "Supabase MCP: inspect the table and function, then call the consume function twice with limit 1 and confirm true then false",
+      "verification_evidence": null,
+      "depends_on": ["F003"]
+    },
+    {
+      "id": "F013",
+      "title": "Quota enforcement",
+      "description": "Consume session and global quota before any model call, using limits from environment variables, and return 429 with a scope so the UI can explain which limit was hit.",
+      "status": "todo",
+      "acceptance_criteria": [
+        "Requests above the session hourly limit return 429 with code QUOTA_EXCEEDED and scope session_hour",
+        "Requests above the session daily limit return 429 with scope session_day",
+        "When the global cap is reached every session is rejected with scope global",
+        "Quota is consumed before the LLM call, proven by a test where the model mock is never called",
+        "Limits come from environment variables and are asserted not to be hardcoded"
+      ],
+      "verification_command": "npm run test:api",
+      "verification_evidence": null,
+      "depends_on": ["F007", "F012"]
+    },
+    {
+      "id": "F014",
+      "title": "Attack and evaluator calibration",
+      "description": "Rewrite the attack library so current models actually fail some attacks, change the evaluator to recognise partial compliance and grade severity, and add a manual calibration script that runs three control prompts and prints a score table.",
+      "status": "todo",
+      "acceptance_criteria": [
+        "The library has at least 10 attacks covering instruction override, role-play, system prompt leakage and obfuscation, each with a documented goal",
+        "The evaluator prompt treats the user system prompt as untrusted data and ignores instructions inside it",
+        "Verdicts support success, failure and partial, with severity consistent with the violation",
+        "The calibration script runs the vulnerable, naive and hardened control prompts and prints their scores",
+        "Across three consecutive runs the control scores keep the expected order with at least two distinct values",
+        "The calibration run output is recorded as evidence in docs/progress.md"
+      ],
+      "verification_command": "npm run test:api && npm run test:unit",
+      "verification_evidence": null,
+      "depends_on": ["F007", "F009"]
+    },
+    {
+      "id": "F015",
+      "title": "Accessibility and copy review",
+      "description": "Close the accessibility gaps and fix the copy: focus management, ARIA labels, announced loading states, contrast and correct Portuguese accentuation across every screen.",
+      "status": "todo",
+      "acceptance_criteria": [
+        "Every interactive element is reachable by keyboard and shows a visible focus ring",
+        "Every form control has an associated label and loading regions use aria-live",
+        "No interface string is missing its accents",
+        "Body text contrast is at least 4.5 to 1, verified with a contrast checker and recorded as evidence",
+        "The layout works at 360px and at 1440px without horizontal scroll"
+      ],
+      "verification_command": "npm run lint && npm run typecheck && npm run test:unit",
+      "verification_evidence": null,
+      "depends_on": ["F005", "F006", "F009"]
+    },
+    {
+      "id": "F016",
+      "title": "Deployment",
+      "description": "Ship to Vercel Hobby with the Vite build served by the FastAPI function on the same origin, environment variables documented, and the existing Vercel project reconnected to this repository.",
+      "status": "todo",
+      "acceptance_criteria": [
+        "Production build produces dist and the FastAPI app serves it on the same origin as /api",
+        ".env.example lists every required variable with no real values",
+        "vercel.json sets the function entrypoint and a 60 second max duration",
+        "A production deploy succeeds on the Hobby plan",
+        "The production URL renders the app and /api/health returns status ok"
+      ],
+      "verification_command": "npm run build",
+      "verification_evidence": null,
+      "depends_on": ["F007"]
+    },
+    {
+      "id": "F017",
+      "title": "Release inspection",
+      "description": "Final audit of the whole project before publishing: no secrets, security review, production build, security headers, 404 behaviour and accessibility, plus a review with the code-review-lite skill before the push.",
+      "status": "todo",
+      "acceptance_criteria": [
+        "Production build passes with no warnings that indicate breakage",
+        "No secret appears in source, in .env.example values or in any VITE_ variable",
+        "npm audit reports no relevant vulnerability, or the accepted risk is written down",
+        "An unknown /api route returns 404 and unknown pages serve the app without an error screen",
+        "Basic accessibility holds: labelled inputs, text on buttons, alt on images",
+        "A final security review is performed with the code-review-lite skill before the push"
+      ],
+      "verification_command": "npm run build && npm audit --omit=dev",
+      "verification_evidence": null,
+      "depends_on": [
+        "F001",
+        "F002",
+        "F003",
+        "F004",
+        "F005",
+        "F006",
+        "F007",
+        "F008",
+        "F009",
+        "F010",
+        "F011",
+        "F012",
+        "F013",
+        "F014",
+        "F015",
+        "F016"
+      ]
+    }
+  ]
+}
