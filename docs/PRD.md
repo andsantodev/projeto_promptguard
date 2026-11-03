@@ -116,7 +116,7 @@ Até 15 telas, organização por responsabilidade: `src/` com `components/`, `ho
 | Limites do free tier (Vercel, Supabase) | Baixo | Cota global torna o consumo previsível |
 | Modelo alvo mudar de comportamento sem aviso | Médio | Versão do modelo fixada em variável de ambiente e exibida na UI |
 
-Premissas: conta OpenRouter com crédito ativo; Vercel Hobby com Fluid compute (300s de função); projeto Supabase "Projetos N8N" reaproveitado; as tabelas `promptg_attacks_library`, `promptg_audit_logs` e `promptg_audit_progress` podem ser removidas; o gasto na OpenRouter é acompanhado manualmente pelo autor, sem teto em dólar configurado no produto; o deploy da v2 reconecta o projeto Vercel existente para preservar o endereço `promptguard-coral.vercel.app`.
+Premissas: conta OpenRouter com crédito ativo; Vercel Hobby com Fluid compute (300s de função); projeto Supabase "Projetos N8N" reaproveitado; as tabelas `promptg_attacks_library`, `promptg_audit_logs` e `promptg_audit_progress` podem ser removidas; o gasto na OpenRouter é acompanhado manualmente pelo autor, sem teto em dólar configurado no produto; o deploy usa um projeto Vercel novo em `projeto-promptguard.vercel.app`, e a URL antiga `promptguard-coral.vercel.app` fica pausada.
 
 ## 11. Perguntas em aberto
 

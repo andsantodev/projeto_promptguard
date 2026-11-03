@@ -245,7 +245,7 @@
       "id": "F016",
       "title": "Deployment",
       "description": "Ship to Vercel Hobby with the Vite build served by the FastAPI function on the same origin, environment variables documented, and the existing Vercel project reconnected to this repository.",
-      "status": "todo",
+      "status": "done",
       "acceptance_criteria": [
         "Production build produces dist and the FastAPI app serves it on the same origin as /api",
         ".env.example lists every required variable with no real values",
@@ -254,7 +254,7 @@
         "The production URL renders the app and /api/health returns status ok"
       ],
       "verification_command": "npm run build",
-      "verification_evidence": null,
+      "verification_evidence": "2026-11-03 (F016): production deploy on Vercel (new project, GitHub sync, FastAPI preset) at https://projeto-promptguard.vercel.app. Smoke: GET / -> 200 text/html serving index.html with <div id=root>; GET /api/health -> 200 with status ok, targetModel google/gemini-3.5-flash-lite and evaluatorModel anthropic/claude-haiku-5.5; GET /api/nao-existe -> 404 application/json. Security headers present on the production response (x-content-type-options, x-frame-options, referrer-policy, permissions-policy). Build command npm ci && npm run build; vercel.json sets maxDuration 60 for backend/main.py; .env.example lists every variable with empty values. First deploy failed with ModuleNotFoundError: No module named fastapi because Vercel used pyproject.toml as the dependency manifest and it had no dependencies; fixed by adding [project] with pinned dependencies (fastapi 0.162.0, httpx 0.28.1, pydantic-settings 2.16.1, pyyaml 6.0.3) and requires-python >=3.12, with requirements.txt pinned to match. The old deployment promptguard-coral.vercel.app is paused; README now points to the live URL.",
       "depends_on": ["F007"]
     },
     {

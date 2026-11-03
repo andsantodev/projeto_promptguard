@@ -6,6 +6,12 @@
      Limite de ~10-12 linhas por entrada: resumo, verificação, pendências, próximo.
      Sem código, tabelas, DDL ou saída completa de comando. -->
 
+## 2026-11-03 — F016 Deployment
+- Feito: deploy na Vercel em projeto novo (`projeto-promptguard`, sync com GitHub, preset FastAPI), com build `npm ci && npm run build`; dependências Python passaram para `[project]` no `pyproject.toml`, porque o Vercel usava esse arquivo como manifesto e ignorava o `requirements.txt`; README aponta para a URL nova.
+- Verificado: `https://projeto-promptguard.vercel.app` -> `/` 200 servindo o app, `/api/health` 200 com status ok e os dois modelos, `/api/nao-existe` 404 JSON; headers de segurança presentes em produção.
+- Pendências: nenhuma feature na fila. A implantação antiga em `promptguard-coral.vercel.app` está pausada.
+- Próximo: projeto concluído.
+
 ## 2026-11-03 — F017 Release inspection
 - Feito: headers de segurança em toda resposta (`nosniff`, frame deny, referrer, permissions), catch-all `/api/*` para garantir 404 mesmo quando o fallback do SPA está ativo, e a inspeção completa de release (segredos, bundle, 404/SPA, acessibilidade, `code-review-lite`).
 - Verificado: `npm run build && npm audit --omit=dev` -> build ok (CSS 27,02 kB, JS 246,84 kB), 0 vulnerabilidades; `npm run verify` -> 63 unit em 8 arquivos e 45 de API. Bundle sem sourcemap e sem padrão de chave.
