@@ -9,11 +9,14 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     openrouter_api_key: str = ""
+    openrouter_base_url: str = "https://openrouter.ai/api/v1"
     supabase_url: str = ""
     supabase_service_role_key: str = ""
 
     target_model: str = "google/gemini-3.5-flash-lite"
     evaluator_model: str = "anthropic/claude-haiku-5.5"
+    llm_timeout_seconds: float = 30.0
+    quota_timeout_seconds: float = 5.0
 
     session_hour_limit: int = 18
     session_day_limit: int = 60

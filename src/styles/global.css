@@ -1,0 +1,92 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/dm-sans/wght.css';
+@import '@fontsource-variable/geist-mono/wght.css';
+@import './tokens.css';
+
+body {
+  margin: 0;
+  min-height: 100svh;
+  background-color: var(--color-base-950);
+  background-image:
+    radial-gradient(
+      circle at 100% 100%,
+      color-mix(in srgb, var(--color-accent-400) 4%, transparent),
+      transparent 55%
+    ),
+    radial-gradient(var(--color-base-800) 1px, transparent 1px);
+  background-repeat: no-repeat, repeat;
+  background-size:
+    100% 100%,
+    24px 24px;
+  color: var(--color-ink-500);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@layer base {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-base-700) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--color-base-700);
+    border: 2px solid transparent;
+    border-radius: var(--radius-full);
+    background-clip: content-box;
+  }
+}
+
+@keyframes promptg-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes promptg-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.promptg-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-base-800) 25%,
+    var(--color-base-700) 50%,
+    var(--color-base-800) 75%
+  );
+  background-size: 200% 100%;
+  animation: promptg-shimmer 1.4s ease-in-out infinite;
+}
+
+.promptg-card-in {
+  animation: promptg-card-in 200ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .promptg-shimmer,
+  .promptg-card-in {
+    animation: none;
+  }
+}

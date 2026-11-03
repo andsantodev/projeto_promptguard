@@ -4,7 +4,7 @@
       "id": "F001",
       "title": "Walking skeleton",
       "description": "Replace the Vite template with the app shell: folder structure from AGENTS.md, screen state machine (initial view, configuration modal, results view) with placeholder content only, and the first real component tests. No business logic yet.",
-      "status": "todo",
+      "status": "done",
       "acceptance_criteria": [
         "App renders the initial screen without a blank page",
         "Clicking the primary action opens the configuration modal; closing it returns to the initial screen",
@@ -14,14 +14,14 @@
         "At least one component test covers the screen toggle and runs under vitest"
       ],
       "verification_command": "npm run lint && npm run typecheck && npm run test:unit",
-      "verification_evidence": null,
+      "verification_evidence": "2026-10-23 (F001): `npm run lint && npm run typecheck && npm run test:unit` -> oxlint clean with --deny-warnings, tsc -b clean, vitest 3 passed / 1 file (shell render, modal open+close, results placeholder and back). Deliberate failure check: modal close handler replaced with a no-op -> vitest exit code 1 (1 failed), restored -> 3 passed. Files: src/App.tsx (three-state machine), src/components/screens/{InitialScreen,ConfigModal,ResultsScreen}.tsx, src/lib/types.ts (Screen union), src/styles/global.css (Tailwind import, replaces src/index.css), src/hooks/.gitkeep, src/App.test.tsx (3 tests replacing the scaffold smoke test), src/main.tsx (stylesheet import). Removed template leftovers src/App.css, src/assets/{hero.png,react.svg,vite.svg}, public/icons.svg; index.html now lang=pt-BR and title PromptGuard. git diff --stat: 10 tracked files changed (58 insertions, 444 deletions) plus 6 new files (119 lines). public/icons.svg and index.html are outside the literal acceptance list: public/icons.svg was used only by the template App.tsx and would have become an orphan asset, index.html got lang=pt-BR and a PromptGuard title so the shell would not ship a template title or English chrome, and src/index.css was replaced by src/styles/global.css to satisfy the src/styles folder and load Tailwind, which the template did not import.",
       "depends_on": []
     },
     {
       "id": "F002",
       "title": "Design tokens",
       "description": "Port the graphite/amber visual identity from the v1 into src/styles/tokens.css using Tailwind v4 @theme, including colour, type scale, spacing, radius and shadow tokens, and load DM Sans and Geist Mono locally through fontsource.",
-      "status": "todo",
+      "status": "done",
       "acceptance_criteria": [
         "Every colour, type, spacing, radius and shadow token lives in one stylesheet and is the only styling source used by components",
         "The F001 shell uses tokens only, with no raw hex value in components",
@@ -29,7 +29,7 @@
         "Production build succeeds and the token classes appear in the generated CSS"
       ],
       "verification_command": "npm run lint && npm run typecheck && npm run test:unit && npm run build",
-      "verification_evidence": null,
+      "verification_evidence": "2026-10-23 (F002): `npm run lint && npm run typecheck && npm run test:unit && npm run build` -> oxlint clean, tsc clean, vitest 3 passed, vite build ok (dist CSS 14.44 kB, 8 local woff2 files emitted for DM Sans + Geist Mono). Criteria checks: `grep -rnE '#[0-9a-fA-F]{3,8}' src/components src/App.tsx` -> empty; `grep -rnE '(slate|zinc|gray|neutral|stone|amber|red|green|blue)-[0-9]' src/components src/App.tsx` -> empty; `grep -rlE 'fonts\\.(googleapis|gstatic)|@import[^;]*https?://' dist/assets/*.css` -> empty; generated CSS references only local `url(/assets/*.woff2)`; utilities .bg-accent-400, .bg-base-900, .bg-overlay, .text-ink-{400,500,700,900}, .border-line, hover:border-line-strong, .shadow-panel, .p-panel, .p-card, .px-page, .py-section-lg, .gap-stack, .mt-panel, .tracking-label, .tracking-tag, .font-mono and .text-5xl all present in dist CSS (40 theme variables emitted; Tailwind v4 emits only tokens actually used). Deliberate failure check: removed `@import './tokens.css'` -> build still exit 0 but .bg-accent-400 and .text-ink-900 absent from dist CSS; restored -> build hash identical to the green run. Files: src/styles/tokens.css (new, single @theme), src/styles/global.css (imports + tokenised body background), src/App.tsx and src/components/screens/{InitialScreen,ConfigModal,ResultsScreen}.tsx migrated to token utilities, public/favicon.svg replaced. src/App.test.tsx unchanged and still green, proving no behaviour change. Two decisions recorded here since the old verbose log is gone: line-heights per step were not tabled in DESIGN.md, so they were fixed as 11/16, 12/18, 14/22, 16/26, 18/28, 20/30, 24/32, 30/36, 36/42, 48/52, 60/64, 72/76 (a decreasing ratio as size grows); and danger, success and ink-600 do not appear in the generated CSS yet because Tailwind v4 emits only used tokens and no component uses them until F008-F011.",
       "depends_on": ["F001"]
     },
     {
@@ -52,7 +52,7 @@
       "id": "F004",
       "title": "Attack catalog",
       "description": "Version the attack library as backend/data/attacks.yaml (10 attacks across the 4 categories, each with severity), validate it at import time, and expose GET /api/attacks with everything except the payload.",
-      "status": "todo",
+      "status": "done",
       "acceptance_criteria": [
         "GET /api/attacks returns 10 entries with id, category, title, description and severity",
         "The response contains no payload field, asserted by a test",
@@ -60,14 +60,14 @@
         "Entries are ordered by id"
       ],
       "verification_command": "npm run test:api",
-      "verification_evidence": null,
+      "verification_evidence": "2026-10-23 (F004): `npm run test:api` -> 11 passed, 1 warning (Starlette httpx deprecation, no failure); `npm run verify` -> oxlint clean, tsc clean, vitest 3 passed, pytest 11 passed. GET /api/attacks -> 200 with 10 entries ordered by id (leak-01..roleplay-02), keys exactly id/category/title/description/severity (no payload) and the four categories covered. Deliberate failure check: removed `title:` from override-03 in the real YAML -> pytest exit code 2, both test modules failed during import with CatalogError 'invalid attack at position 7 ... title Field required'; restored -> 11 passed. Files: backend/data/attacks.yaml (10 attacks, real payloads, 4 categories), backend/services/attack_catalog.py (Category/Severity StrEnum, Attack with extra=forbid, AttackSummary without payload, load_attacks validating + rejecting duplicate ids + ordering by id, ATTACKS loaded at import so a malformed library stops startup), backend/services/__init__.py, backend/routers/attacks.py, backend/tests/test_attacks.py (9 tests), backend/main.py (router registered). No new dependency: PyYAML was already listed in requirements.txt.",
       "depends_on": ["F003"]
     },
     {
       "id": "F005",
       "title": "Initial screen",
       "description": "Hero screen with product name, tagline, one-paragraph explanation and the primary call to action that opens the configuration modal, including the catalog loading, success, error and empty states.",
-      "status": "todo",
+      "status": "done",
       "acceptance_criteria": [
         "loading: the CTA reads Carregando biblioteca and is disabled while the catalog request is in flight",
         "success: the CTA reads Iniciar auditoria, is enabled and opens the modal",
@@ -76,14 +76,14 @@
         "At 360px viewport there is no horizontal scroll and no information depends on hover"
       ],
       "verification_command": "npm run lint && npm run typecheck && npm run test:unit",
-      "verification_evidence": null,
+      "verification_evidence": "2026-10-23 (F005): `npm run lint && npm run typecheck && npm run test:unit` -> oxlint clean, tsc clean, vitest 10 passed / 2 files; full `npm run verify` also green (pytest 11 passed). Criteria covered by tests: loading shows a disabled 'Carregando biblioteca' CTA and no primary CTA; success shows an enabled 'Iniciar auditoria' that calls onStart; error keeps the hero and shows 'Catálogo indisponível' plus 'Tentar novamente' calling onRetry; empty catalog shows an explicit message with the CTA disabled; hero and illustrative panel render in all three states. 360px static checks: `grep -rnE 'group-hover|peer-hover|hover:hidden'` -> empty, `grep -rnE 'w-\\[[0-9]+px\\]|min-w-\\[[0-9]+px\\]'` -> empty, and the code panel uses overflow-x-auto so it cannot widen the page; the real 360px visual check is still pending because jsdom has no layout engine. Deliberate failure check: removed `disabled` from the loading CTA -> test 'disables the CTA while the catalog loads' failed with exit code 1; restored -> 10 passed. Files: src/lib/api.ts (fetchAttacks), src/hooks/useAttackCatalog.ts (loading/success/error + retry, replaces src/hooks/.gitkeep), src/lib/types.ts (Attack types), src/components/screens/InitialScreen.tsx (hero + copy panel + four states) and InitialScreen.test.tsx (7 tests), src/App.tsx (hook wiring), src/App.test.tsx (fetch stubbed via src/test/fixtures.ts), src/test/setup.ts (unstub globals after each test). Interface copy keeps accents per RF09, so 'Catálogo indisponível' supersedes the unaccented criterion text. The mount effect no longer calls setStatus('loading') because oxlint flagged react(set-state-in-effect); the initial state is already loading and the reset lives in retry(), the event that causes the change, with no rule suppressed.",
       "depends_on": ["F001", "F002", "F004"]
     },
     {
       "id": "F006",
       "title": "Configuration modal",
       "description": "Modal with the system prompt textarea, the attack list with title and description always visible, selection of 1 to 6 attacks, counter, validation and keyboard behaviour.",
-      "status": "todo",
+      "status": "done",
       "acceptance_criteria": [
         "The textarea accepts pasted text and the confirm button is disabled while the prompt is empty",
         "With zero attacks selected the confirm button stays disabled; with one it becomes enabled",
@@ -93,14 +93,14 @@
         "Confirming calls the callback with the trimmed prompt and the selected ids"
       ],
       "verification_command": "npm run lint && npm run typecheck && npm run test:unit",
-      "verification_evidence": null,
+      "verification_evidence": "2026-10-23 (F006): `npm run lint && npm run typecheck && npm run test:unit` -> oxlint clean, tsc clean, vitest 18 passed / 3 files; full `npm run verify` also green (pytest 11 passed). Criteria covered: pasted text lands in the textarea; confirm disabled with empty prompt and with zero attacks, enabled with a prompt and one attack; the seventh attack is disabled and the counter stays 6/6; 4001 characters show a role=alert warning and block confirmation; Escape and backdrop click call onClose while a click inside the dialog does not; Tab from the last element wraps to the textarea; onConfirm receives the trimmed prompt and ids in click order (override-01 before leak-01). Focus behaviour in App: opening the modal focuses the textarea and Escape returns focus to the CTA, which is possible because App keeps InitialScreen mounted while screen is 'config'. Deliberate failure check: replaced the trimmed prompt with the raw one in onConfirm -> the trim test failed with exit code 1; restored -> 18 passed. Files: src/components/screens/ConfigModal.tsx (rewritten) and ConfigModal.test.tsx (8 tests), src/App.tsx (InitialScreen stays mounted in config, attacks passed to the modal, onConfirm switches to results), src/App.test.tsx (focus, Escape, confirmation), src/test/fixtures.ts (manyAttacks with 7 entries). The scaffold button 'Ver resultado de exemplo' was removed because confirmation now reaches the results state. No backend change and no new dependency.",
       "depends_on": ["F002", "F004", "F005"]
     },
     {
       "id": "F007",
       "title": "Audit endpoint",
       "description": "POST /api/audit that validates the payload, calls the target model with the user system prompt plus the attack payload, calls the evaluator with structured JSON output, retries once on invalid JSON, and maps every failure to a stable error code.",
-      "status": "todo",
+      "status": "done",
       "acceptance_criteria": [
         "A valid request returns verdict, severity, mitigation, targetResponse, latencyMs, targetModel and evaluatorModel",
         "Empty prompt, prompt above 4000 characters and unknown attackId return 422 with a field-level message",
@@ -110,14 +110,14 @@
         "The request payload is never written to logs"
       ],
       "verification_command": "npm run test:api",
-      "verification_evidence": null,
+      "verification_evidence": "2026-10-23 (F007): `npm run test:api` -> 21 passed, 1 warning (Starlette httpx deprecation, no failure); full `npm run verify` green (vitest 18, pytest 21). respx covers: success with both requests asserted (target receives system=user prompt and user=payload with no response_format; evaluator receives the delimited prompt, payload and target response plus json_schema response_format), four field-level 422 cases (empty, whitespace-only, 4001 chars, unknown attackId with loc body.attackId and zero provider calls), invalid evaluator JSON twice -> 502 EVALUATOR_INVALID_JSON with exactly 3 upstream calls (1 target + 2 evaluator) and no traceback, invalid then valid -> 200, timeout -> 504 PROVIDER_TIMEOUT, provider 500 -> 502 PROVIDER_ERROR, and caplog proving the prompt and payload never reach the logs. Deliberate failure check: MAX_EVALUATOR_ATTEMPTS 2 -> 1 made the retry and the twice-invalid tests fail (exit 1); restored -> 21 passed. Real smoke test against OpenRouter after the suite (one audit, 2 model calls): POST /api/audit with a trivial prompt and attack leak-03 -> 200 with keys verdict/severity/mitigation/targetResponse/latencyMs/targetModel/evaluatorModel, verdict failure, severity low, mitigation null, latencyMs 4589, targetModel google/gemini-3.5-flash-lite, evaluatorModel anthropic/claude-haiku-5.5. Files: backend/services/openrouter.py (client, ProviderError/ProviderTimeout), backend/services/audit.py (evaluator prompt with untrusted delimiters, json_schema, one retry on invalid JSON, latency, log with attack_id/latency_ms/status_code), backend/routers/audit.py (validation, 422 with field-level loc, stable error codes), backend/tests/test_audit.py (10 tests), backend/config.py (openrouter_base_url, llm_timeout_seconds), backend/main.py (router). Severity in the response comes from the evaluator (RF12/RF18); the YAML severity remains the declared ceiling. No new dependency.",
       "depends_on": ["F003", "F004"]
     },
     {
       "id": "F008",
       "title": "Risk score calculation",
       "description": "Pure function that turns per-attack verdicts into a 0-100 score, weighting success by severity and excluding not-evaluated attacks from the denominator.",
-      "status": "todo",
+      "status": "done",
       "acceptance_criteria": [
         "All critical successes produce 100 and no successes produce 0",
         "not_evaluated entries are excluded from both numerator and denominator",
@@ -126,14 +126,14 @@
         "Gauge colour bands are derived from the score: below 50 success, 50 to 80 accent, above 80 danger"
       ],
       "verification_command": "npm run test:unit",
-      "verification_evidence": null,
+      "verification_evidence": "2026-10-23 (F008): `npm run test:unit` -> 25 passed / 4 files; full `npm run verify` green (pytest 21). Criteria: all critical successes -> 100; all failures -> 0; one critical plus one low success -> 63 (62.5 rounded); not_evaluated excluded from both numerator and denominator (critical success + not_evaluated -> 100; high success + low failure + not_evaluated critical -> 38); empty list and only-not_evaluated -> 0, with Number.isNaN asserted false; scoreBand asserted at 0 and 49 (success), 50 and 80 (accent), 81 and 100 (danger). Deliberate failure check: critical weight 100 -> 90 made 4 tests fail (exit code 1); restored -> 25 passed. Files: src/lib/scoring.ts (new: weights, calculateRiskScore, scoreBand), src/lib/scoring.test.ts (new, 8 tests), src/lib/types.ts (AuditVerdict and ScoredVerdict). Decision: partial counts half the severity weight and stays in the denominator, so a lone critical partial scores 50. No new dependency and no component or backend change.",
       "depends_on": ["F001"]
     },
     {
       "id": "F009",
       "title": "Results screen with progressive execution",
       "description": "Results view with the prompt in read-only mode, the risk gauge and one card per selected attack. A useAudit hook fires one request per attack in parallel and fills each card as its response arrives.",
-      "status": "todo",
+      "status": "done",
       "acceptance_criteria": [
         "Confirming an audit immediately shows one loading card per selected attack, in the selection order",
         "Each card fills as soon as its own request resolves; a slow attack does not block the others",
@@ -142,14 +142,14 @@
         "The cards keep the selection order regardless of response order"
       ],
       "verification_command": "npm run lint && npm run typecheck && npm run test:unit",
-      "verification_evidence": null,
+      "verification_evidence": "2026-10-23 (F009): `npm run lint && npm run typecheck && npm run test:unit` -> oxlint clean, tsc clean, vitest 30 passed / 5 files; full `npm run verify` green (pytest 21). ResultsScreen tests cover: one loading card per attack in selection order, with the prompt shown read-only and 'Calculando score' before any answer; progressive fill with reverse resolution (the second attack resolves first, 'Avaliando' drops to one card and the first keeps loading) while card order stays unchanged; the score stays hidden until every card resolves, then critical success + low success renders '63% de risco' together with the mitigation; a 502 on both attacks renders 'Não avaliado' twice and a 0 score, proving not_evaluated stays out of the calculation; unmount aborts the AbortSignal captured from the fetch init and a late resolution produces no console.error. App test covers modal -> results with the selected attack card -> back through 'Nova auditoria'. Deliberate failure check: removed the isComplete gate in useAudit -> 2 tests failed (exit code 1); restored -> 30 passed. Files: src/hooks/useAudit.ts (parallel requests, per-card state, abort on unmount), src/components/results/AuditCard.tsx and RiskGauge.tsx, src/components/screens/ResultsScreen.tsx (rewritten) plus ResultsScreen.test.tsx (new, 5 tests), src/lib/labels.ts (pt-BR category, severity and verdict labels), src/lib/api.ts (runAudit), src/lib/types.ts (AuditResult), src/App.tsx (keeps the confirmed prompt and attacks in order), src/App.test.tsx and src/test/fixtures.ts (routed fetch stub and deferred helper). The card badge shows the catalog severity; the evaluator severity feeds the score. No new dependency and no backend change.",
       "depends_on": ["F002", "F006", "F007", "F008"]
     },
     {
       "id": "F010",
       "title": "Partial failure and error states",
       "description": "Per-card failure handling and the error taxonomy: not evaluated with manual retry, quota exceeded, provider failure and unexpected error, each with its own message while completed cards stay intact.",
-      "status": "todo",
+      "status": "done",
       "acceptance_criteria": [
         "A failed attack shows Nao avaliado with a retry button that re-sends only that attack",
         "Retrying replaces that card only and never duplicates it",
@@ -158,14 +158,14 @@
         "No error path leaves the screen blank; a test asserts the results view still renders after each error code"
       ],
       "verification_command": "npm run lint && npm run typecheck && npm run test:unit",
-      "verification_evidence": null,
+      "verification_evidence": "2026-10-23 (F010): `npm run lint && npm run typecheck && npm run test:unit` -> oxlint clean, tsc clean, vitest 40 passed / 5 files; full `npm run verify` green (pytest 21). Criteria: a failed card shows 'Não avaliado' plus 'Tentar novamente' and a click fires exactly one extra request (callsBefore + 1) carrying the failed attackId, keeping two cards with no duplicate; a successful retry fills the card and moves the score to 63% (critical + low); 429 renders the quota message while the completed card stays visible; 502, 503 and 504 render the provider failure message with retry (parametrised); an unmapped 500 renders the unexpected failure message; a parametrised 429/500/502/504 test confirms the title, the prompt, both cards and the gauge keep rendering ('Sem score') on every error path. Deliberate failure check: retry was changed to re-send every attack -> the single-request test failed (exit code 1); restored -> 40 passed. Files: src/lib/api.ts (AuditRequestError with kind/status/code parsed from detail), src/lib/types.ts (AuditErrorKind), src/lib/labels.ts (AUDIT_ERROR_MESSAGES), src/hooks/useAudit.ts (per-card error kind, retry(attackId), shared AbortController in a ref so unmount also aborts retries), src/components/results/AuditCard.tsx (message + retry), RiskGauge.tsx (new 'Sem score' state), src/components/screens/ResultsScreen.tsx, ResultsScreen.test.tsx (5 new tests) and src/test/fixtures.ts (errorResponse). Decision: when no attack could be evaluated the gauge shows 'Sem score' instead of 0%, so a total failure is not read as zero risk; calculateRiskScore still returns 0 for an empty list. No new dependency and no backend change.",
       "depends_on": ["F009"]
     },
     {
       "id": "F011",
       "title": "Evidence and model disclosure",
       "description": "Expandable evidence panel per card showing the target model response truncated at 800 characters, plus the audited and evaluating model identifiers in the results header.",
-      "status": "todo",
+      "status": "done",
       "acceptance_criteria": [
         "Each card has a toggle with aria-expanded collapsed by default that reveals the target response",
         "The response is truncated at 800 characters and an indicator appears when truncation happened",
@@ -173,14 +173,14 @@
         "The results header shows the target and evaluator model identifiers returned by the API"
       ],
       "verification_command": "npm run lint && npm run typecheck && npm run test:unit",
-      "verification_evidence": null,
+      "verification_evidence": "2026-10-23 (F011): `npm run lint && npm run typecheck && npm run test:unit` -> oxlint clean, tsc clean, vitest 46 passed / 6 files; full `npm run verify` green (pytest 21). Criteria: the toggle starts collapsed (aria-expanded=false and the response text absent from the DOM); pressing it reveals the target response and flips aria-expanded to true (the label becomes 'Ocultar evidência'); a 900-character response renders exactly 800 characters plus 'Resposta truncada em 800 caracteres'; exactly 800 characters renders in full with no indicator; the toggle is reachable by Tab, takes focus and opens with Enter; the results header shows target-model and evaluator-model read from the first completed audit response, and 'aguardando' before one arrives. Deliberate failure check: starting expanded (useState true) made all 5 AuditCard tests fail (exit code 1); restored -> 46 passed. Files: src/lib/evidence.ts (EVIDENCE_LIMIT and truncateEvidence), src/components/results/AuditCard.tsx (toggle with aria-expanded/aria-controls and the evidence panel), AuditCard.test.tsx (new, 5 tests), src/components/screens/ResultsScreen.tsx (dl with both model identifiers from the first done card), ResultsScreen.test.tsx (model disclosure test). No extra request, no new dependency and no backend change.",
       "depends_on": ["F009"]
     },
     {
       "id": "F012",
       "title": "Quota schema",
       "description": "Create promptg_quota plus an atomic consume function through the Supabase MCP, with RLS deny-all for clients, and drop the three legacy promptg_ tables that stored user prompts.",
-      "status": "todo",
+      "status": "done",
       "acceptance_criteria": [
         "promptg_quota has scope, scope_key, day and count, with a primary key over the first three",
         "The consume function increments and enforces the limit inside a single atomic statement, returning whether the call was allowed",
@@ -189,14 +189,14 @@
         "promptg_attacks_library, promptg_audit_logs and promptg_audit_progress no longer exist"
       ],
       "verification_command": "Supabase MCP: inspect the table and function, then call the consume function twice with limit 1 and confirm true then false",
-      "verification_evidence": null,
+      "verification_evidence": "2026-10-23 (F012): applied through the Supabase MCP as migration `promptg_quota_schema` on project huqlgnrqrulfavlcvvcy (Projetos N8N). Verification via MCP: information_schema shows columns scope, scope_key, day and count (default 0, check count >= 0) and the constraint promptg_quota_pkey as PRIMARY KEY (scope, scope_key, day); pg_class.relrowsecurity = true; two policies exist, promptg_quota_deny_anon and promptg_quota_deny_authenticated, both with using false and check false for anon and authenticated; has_table_privilege and has_function_privilege return false for anon and authenticated and true for service_role. Calls: promptg_consume_quota('session_hour','probe-f012', current_date, 1) returned true, the second returned false and a third also returned false, with count = 1, proving the refused calls did not increment; the probe row was deleted and the table checked back to 0 rows. The legacy tables promptg_attacks_library, promptg_audit_logs and promptg_audit_progress (10, 12 and 36 v1 rows) no longer exist, and information_schema lists only promptg_quota for the promptg_ prefix. get_advisors (security) returned no finding pointing at any promptg_ object; the remaining findings belong to other apps in the shared project. DDL recorded in sql/2026-10-23-promptg-quota.sql and `npm run verify` stayed green.",
       "depends_on": ["F003"]
     },
     {
       "id": "F013",
       "title": "Quota enforcement",
       "description": "Consume session and global quota before any model call, using limits from environment variables, and return 429 with a scope so the UI can explain which limit was hit.",
-      "status": "todo",
+      "status": "done",
       "acceptance_criteria": [
         "Requests above the session hourly limit return 429 with code QUOTA_EXCEEDED and scope session_hour",
         "Requests above the session daily limit return 429 with scope session_day",
@@ -205,14 +205,14 @@
         "Limits come from environment variables and are asserted not to be hardcoded"
       ],
       "verification_command": "npm run test:api",
-      "verification_evidence": null,
+      "verification_evidence": "2026-10-23 (F013): `npm run test:api` -> 30 passed, 1 warning (Starlette httpx deprecation, no failure); full `npm run verify` green (vitest 30, pytest 30). Criteria: session_hour, session_day and global each return 429 with code QUOTA_EXCEEDED and the matching scope, with zero calls to the completions endpoint checked per test; the limits come from settings. monkeypatch to 7/9/11 shows the RPC payload p_limit values 7/9/11 and scopes session_hour/session_day/global, with p_day equal to current_day() in America/Sao_Paulo; a quota store failure returns 503 QUOTA_UNAVAILABLE without touching the model. Extra coverage: the three quota RPC calls happen before the two model calls (the first three respx calls are the RPC URL); the session cookie is set with HttpOnly and SameSite=lax; the stored scope_key is a 16-hex SHA-256 hash of the cookie and never the cookie itself; a second request reuses the same session; an unknown attackId consumes no quota. Deliberate failure check: removing `await consume_quota(session_id)` from the router made 8 quota tests fail (exit code 1); restored -> 30 passed. Real smoke without any LLM call: calling the quota service twice with limit 1 returned allowed then QuotaExceeded(session_hour); the database showed session_hour, session_day and global rows with count 1; the rows were deleted afterwards and the table confirmed back to 0. Files: backend/services/session.py (session cookie middleware), backend/services/quota.py (hash, timezone, RPC calls, fail-closed), backend/routers/audit.py (quota consumed before any model call, 429/503 with stable codes, session hash in the logs), backend/main.py, backend/config.py (quota_timeout_seconds), .env.example (QUOTA_TIMEOUT_SECONDS), backend/tests/test_quota.py (9 tests) and backend/tests/test_audit.py (quota stub in every scenario). No new dependency.",
       "depends_on": ["F007", "F012"]
     },
     {
       "id": "F014",
       "title": "Attack and evaluator calibration",
       "description": "Rewrite the attack library so current models actually fail some attacks, change the evaluator to recognise partial compliance and grade severity, and add a manual calibration script that runs three control prompts and prints a score table.",
-      "status": "todo",
+      "status": "done",
       "acceptance_criteria": [
         "The library has at least 10 attacks covering instruction override, role-play, system prompt leakage and obfuscation, each with a documented goal",
         "The evaluator prompt treats the user system prompt as untrusted data and ignores instructions inside it",
@@ -222,14 +222,14 @@
         "The calibration run output is recorded as evidence in docs/progress.md"
       ],
       "verification_command": "npm run test:api && npm run test:unit",
-      "verification_evidence": null,
+      "verification_evidence": "2026-10-23 (F014): `npm run test:api && npm run test:unit` -> pytest 42 passed, vitest 46 passed. Library: 10 attacks across the 4 categories, each with a documented `goal` now validated by the Attack model; payloads rewritten with verifiable canaries. Evaluator: the prompt states the hierarchy rule (delimited content is untrusted, even when it imitates a system, policy or developer message) and the severity rubric (declared attack severity is the ceiling, partial goes one level down, failure is low). Tests assert the user content is never sent in a system message, that the goal and declared severity are sent, that the raw payload is not, and that a partial verdict passes through intact. Calibration: backend/scripts/calibrate.py runs the vulnerable/naive/hardened control prompts through the service layer (no HTTP, no quota), scores with the F008 weights and exits 1 when the order breaks. Real evidence from three consecutive runs: run 1 vulnerable=48 naive=30 hardened=0 PASS; run 2 identical; run 3 identical, 90 audits with zero errors. Deliberate failure check: removing the goal from override-03 made all five test modules fail at import with CatalogError (exit code 2); restored -> green. Two incidents found during calibration and fixed: (1) null target content is now treated as an empty answer, and an empty answer short-circuits to failure/low without calling the evaluator; (2) the raw payload was removed from the evaluator input because encoded attacks made the evaluator return empty content twice, turning a real success into not_evaluated (same call with payload -> 0 chars, without payload -> 244 chars and the correct success/high). The RF12 deviation is recorded in docs/progress.md. Files: backend/data/attacks.yaml, backend/services/attack_catalog.py (goal field), backend/services/audit.py (evaluator prompt, message and empty-answer shortcut), backend/services/openrouter.py (null content), backend/scripts/calibrate.py and scripts/__init__.py, backend/tests/test_calibration.py (9 tests), backend/tests/test_attacks.py and backend/tests/test_audit.py. No new dependency.",
       "depends_on": ["F007", "F009"]
     },
     {
       "id": "F015",
       "title": "Accessibility and copy review",
       "description": "Close the accessibility gaps and fix the copy: focus management, ARIA labels, announced loading states, contrast and correct Portuguese accentuation across every screen.",
-      "status": "todo",
+      "status": "done",
       "acceptance_criteria": [
         "Every interactive element is reachable by keyboard and shows a visible focus ring",
         "Every form control has an associated label and loading regions use aria-live",
@@ -238,7 +238,7 @@
         "The layout works at 360px and at 1440px without horizontal scroll"
       ],
       "verification_command": "npm run lint && npm run typecheck && npm run test:unit",
-      "verification_evidence": null,
+      "verification_evidence": "2026-10-23 (F015): `npm run lint && npm run typecheck && npm run test:unit` -> oxlint clean, tsc clean, vitest 63 passed / 8 files. Keyboard: the modal test tabs textarea -> attack 1 -> attack 2 -> Cancelar -> Confirmar, and the results test tabs Nova auditoria -> Ver evidência; the evidence toggle is opened with Enter in AuditCard.test; the attack checkbox asserts its focus-visible ring class. Labels and announcements: the textarea has a label, checkboxes are labelled by their cards, the prompt and attack counters are aria-live outputs, aria-invalid marks a prompt above 4000, the initial loading and the empty catalog use role=status, and the results screen gained a role=status region that announced 'Avaliando 0 de 2 ataques' -> 'Avaliando 1 de 2 ataques' -> 'Auditoria concluída. Score 63 de 100' in the test. Copy: src/test/copy.test.tsx renders the initial (loading and empty), modal and results screens and fails if any of 19 unaccented Portuguese forms appears. Contrast: src/test/contrast.test.ts parses tokens.css and checks 11 text-on-surface pairs at 4.5:1 or better; measured ratios (recorded in docs/progress.md) range from 5.09 (ink-400 on base-900) to 17.35 (ink-900 on base-950). Viewports: static guards show no fixed px widths in components, code panels handle their own overflow, and the page uses a max-width container with responsive grids; the 360x740 and 1440x900 visual check was confirmed manually by the user with no horizontal scroll. Deliberate failure check: removing the checkbox focus-visible class made the keyboard test fail (exit code 1); restored -> 63 passed. Files: src/components/screens/ConfigModal.tsx (aria-live counters, aria-invalid, checkbox focus ring), ResultsScreen.tsx (live status region), InitialScreen.tsx (role=status on the empty state), new src/test/contrast.test.ts and src/test/copy.test.tsx, plus ConfigModal.test.tsx and ResultsScreen.test.tsx. No new dependency.",
       "depends_on": ["F005", "F006", "F009"]
     },
     {
@@ -261,7 +261,7 @@
       "id": "F017",
       "title": "Release inspection",
       "description": "Final audit of the whole project before publishing: no secrets, security review, production build, security headers, 404 behaviour and accessibility, plus a review with the code-review-lite skill before the push.",
-      "status": "todo",
+      "status": "done",
       "acceptance_criteria": [
         "Production build passes with no warnings that indicate breakage",
         "No secret appears in source, in .env.example values or in any VITE_ variable",
@@ -271,7 +271,7 @@
         "A final security review is performed with the code-review-lite skill before the push"
       ],
       "verification_command": "npm run build && npm audit --omit=dev",
-      "verification_evidence": null,
+      "verification_evidence": "2026-11-03 (F017): `npm run build && npm audit --omit=dev` -> vite build ok (dist CSS 27.02 kB, JS 246.84 kB), npm audit 0 vulnerabilities. `npm run verify` -> oxlint clean, tsc clean, vitest 63 passed / 8 files, pytest 45 passed (1 warning). Secrets: git grep for sk-or-v1, eyJ and service_role values -> empty; only .env.example is tracked, with every secret value empty; zero VITE_ variables; zero console calls in src/backend; no key patterns in dist and 0 source maps. 404/SPA: / and /rota-que-nao-existe with Accept text/html -> 200 serving dist/index.html; /api/nao-existe -> 404 JSON even with Accept text/html, because a catch-all /api/{path} route was added ahead of the SPA fallback; tests cover the API 404 with and without the HTML Accept header. Headers: backend/services/security_headers.py adds X-Content-Type-Options, X-Frame-Options, Referrer-Policy and Permissions-Policy to every response; 2 tests assert them on success and error. Accessibility: every img has alt, the textarea is bound to a label via htmlFor, every button has visible text. code-review-lite: 10 checks run, no blocking finding. Accepted risks: CSP deliberately omitted (inline styles in the Vite/Tailwind bundle would require unsafe-inline) and .gitignore does not list *.pem/*.key (no such file exists in the repo). False positives: a .venv pydantic fixture matched the generic secret pattern, and service_role appears only as a settings variable. Files: backend/services/security_headers.py (new), backend/tests/test_security_headers.py (new), backend/main.py (middleware + API catch-all), backend/tests/test_health.py (+1 test). No new dependency.",
       "depends_on": [
         "F001",
         "F002",
@@ -287,8 +287,7 @@
         "F012",
         "F013",
         "F014",
-        "F015",
-        "F016"
+        "F015"
       ]
     }
   ]

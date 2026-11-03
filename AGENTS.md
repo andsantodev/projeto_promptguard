@@ -68,6 +68,10 @@ Local dev requires two processes: `npm run dev` (Vite, proxies `/api` to port 80
 ## At the end of every session
 
 1. Update `docs/progress.md` with what was done and verified
+   - Keep docs/progress.md entries short (~10 lines: summary, verification, pending,
+     next). No code, tables or full logs; detail belongs in verification_evidence and
+     commit messages. If the file passes ~300 lines, move older sessions to
+     docs/progress-archive.md.
 2. Update `docs/feature_list.json`
 3. Update `docs/session-handoff.md` with current state and next suggested feature
 4. Commit only if the project is in a safe state to resume
